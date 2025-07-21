@@ -1,0 +1,23 @@
+# CMake garbage
+CMakeLists.txt.user
+CMakeCache.txt
+CMakeFiles
+CMakeScripts
+Testing
+Makefile
+cmake_install.cmake
+install_manifest.txt
+compile_commands.json
+CTestTestfile.cmake
+_deps
+ZERO_CHECK.log
+
+# IDE garbage
+out
+.vs
+.vscode
+
+# Build resources
+build/*
+engine
+pkgs
