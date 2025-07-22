@@ -10,7 +10,7 @@ struct Config {
     unsigned int width=800, height=600;
     bool preferencesOpen=false;
     bool messageViewerOpen=true;
-    bool harvestedSystemInfoOpen=false;
+    bool harvestedSystemInfoOpen=true;
     bool categorize=false;
     bool multitoggles=false;
     bool showRecent=true;
@@ -24,19 +24,19 @@ struct Config {
         auto cfg=StrFromFile("viewer.config.json");
         nlohmann::json json=nlohmann::json::parse(cfg);
         if(!json["window"].is_null()) {
-        if(!json["window"]["width"].is_null()) width=json["window"]["width"];
-        if(!json["window"]["height"].is_null()) height=json["window"]["height"];
-    }
+            if(!json["window"]["width"].is_null()) width=json["window"]["width"];
+            if(!json["window"]["height"].is_null()) height=json["window"]["height"];
+        }
         if(!json["view"].is_null()) {
-        if(!json["view"]["viewer"].is_null()) messageViewerOpen=json["view"]["viewer"];
-        if(!json["view"]["systeminfo"].is_null()) harvestedSystemInfoOpen=json["view"]["systeminfo"];
-    }
+            if(!json["view"]["viewer"].is_null()) messageViewerOpen=json["view"]["viewer"];
+            if(!json["view"]["systeminfo"].is_null()) harvestedSystemInfoOpen=json["view"]["systeminfo"];
+        }
         if(!json["preferences"].is_null()) {
-        if(!json["preferences"]["categorize"].is_null()) categorize=json["preferences"]["categorize"];
-        if(!json["preferences"]["multitoggles"].is_null()) multitoggles=json["preferences"]["multitoggles"];
-        if(!json["preferences"]["show_recent_files"].is_null()) showRecent=json["preferences"]["show_recent_files"];
-        if(!json["preferences"]["max_recent_files"].is_null()) maxRecent=json["preferences"]["max_recent_files"];
-    }
+            if(!json["preferences"]["categorize"].is_null()) categorize=json["preferences"]["categorize"];
+            if(!json["preferences"]["multitoggles"].is_null()) multitoggles=json["preferences"]["multitoggles"];
+            if(!json["preferences"]["show_recent_files"].is_null()) showRecent=json["preferences"]["show_recent_files"];
+            if(!json["preferences"]["max_recent_files"].is_null()) maxRecent=json["preferences"]["max_recent_files"];
+        }
     }
     void save() {
         nlohmann::json json;

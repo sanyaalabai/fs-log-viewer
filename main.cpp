@@ -74,7 +74,7 @@ class FsLogViewer : public Firesteel::App {
             ImGui::Begin("Preferences",&config.preferencesOpen);
 
             ImGui::Text("General");
-            ImGui::Checkbox("Categorize", &config.categorize);
+            //ImGui::Checkbox("Categorize", &config.categorize);
             ImGui::Checkbox("Allow multiple filters", &config.multitoggles);
 
             ImGui::Text("Security");
