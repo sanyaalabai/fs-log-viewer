@@ -22,6 +22,7 @@ class FsLogViewer : public Firesteel::App {
     virtual void onInitialize() override {
         appPath=std::filesystem::current_path();
         recent.load();
+        logParser.clear();
     }
     virtual void onUpdate() override {
         ImGui::PopStyleVar(3);
@@ -42,17 +43,19 @@ class FsLogViewer : public Firesteel::App {
                 if(ImGui::MenuItem("Open")) {
                     auto paths = OS::fileDialog(false,false,"",&openFileFilters,"Open log");
                     if(paths.size()>0) {
+                        logParser.clear();
                         logParser.filePath=paths[0];
                         //Reset current path.
                         std::filesystem::current_path(appPath);
                         recent.check(logParser.filePath,config.maxRecent);
-                        //Parse the logParser.
+                        //Parse the log.
                         logParser.parse();
                     } else LOG_ERRR("Failed to request log file path");
                 }
                 if(config.showRecent) if(ImGui::BeginMenu("Recent")) {
                     for(size_t r=0;r<recent.paths.size();r++)
                         if(ImGui::MenuItem(recent.paths[r].c_str())) {
+                            logParser.clear();
                             logParser.filePath=recent.paths[r];
                             recent.check(logParser.filePath,config.maxRecent);
                             logParser.parse();
@@ -83,7 +86,7 @@ class FsLogViewer : public Firesteel::App {
             if(ImGui::Button("NUT")) exit(-1);
             ImGui::End();
         }
-        /* Toolbar */{
+        /* Toolbar */ {
             ImGui::PopStyleVar(1);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(1.0f, 1.0f));
             ImGui::Begin("Toolbar");
@@ -121,16 +124,35 @@ class FsLogViewer : public Firesteel::App {
         }
         if(config.harvestedSystemInfoOpen) {
             ImGui::Begin("Harvested System Info", &config.harvestedSystemInfoOpen);
-            ImGui::Text("This tab is currently in development. Currently it doesn't show real info.");
-            if(ImGui::CollapsingHeader("Firesteel Configuration", ImGuiTreeNodeFlags_DefaultOpen)) {
-                ImGui::Text("Version: 0.2.1");
-                ImGui::Text("Renderer: OpenGL");
+            ImGui::TextWrapped("This tab can show incomplete information if user\
+ has disabled hardware enumeration in global Firesteel config file\
+ or if systemspecs has failed to retrieve information.");
+            if(!logParser.env.fsVersion.empty()) if(ImGui::CollapsingHeader("Firesteel Configuration", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text(("Version: "+logParser.env.fsVersion).c_str());
+                ImGui::Text(("Renderer: "+logParser.env.fsRenderer).c_str());
             }
-            if(ImGui::CollapsingHeader("Enviroment")) {
-                if(ImGui::CollapsingHeader("OS", ImGuiTreeNodeFlags_DefaultOpen)) {
-                    ImGui::Text("Name: Windows");
-                    ImGui::Text("Version: 10");
-                }
+            if(logParser.env.os.name!="-") if(ImGui::CollapsingHeader("OS", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text(("Name: "+logParser.env.os.name).c_str());
+                ImGui::Text(("Build/distro: "+logParser.env.os.distroBuild).c_str());
+                ImGui::Text(("Version: "+logParser.env.os.version).c_str());
+                ImGui::Text(("Architecture: "+logParser.env.os.architecture).c_str());
+            }
+            if(logParser.env.cpu.output!="-") if(ImGui::CollapsingHeader("CPU", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text(("Vendor: "+logParser.env.cpu.vendor).c_str());
+                ImGui::Text(("Model: "+logParser.env.cpu.model).c_str());
+                ImGui::Text("Cores: %i",logParser.env.cpu.cores);
+                ImGui::Text("Frequency: %i",logParser.env.cpu.frequency);
+            }
+            if(logParser.env.gpu.output!="-") if(ImGui::CollapsingHeader("GPU", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text(("Model: "+logParser.env.gpu.model).c_str());
+                ImGui::Text("Memory: %.2fGB",logParser.env.gpu.memoryGB);
+            }
+            if(logParser.env.ram.output!="-") if(ImGui::CollapsingHeader("RAM", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text("Memory: %.2fGB",logParser.env.ram.memoryGB);
+            }
+            if(logParser.env.motherboard.output!="-") if(ImGui::CollapsingHeader("Motherboard", ImGuiTreeNodeFlags_DefaultOpen)) {
+                ImGui::Text(("Model: "+logParser.env.motherboard.model).c_str());
+                ImGui::Text(("Vendor: "+logParser.env.motherboard.vendor).c_str());
             }
             ImGui::End();
         }
@@ -171,11 +193,12 @@ class FsLogViewer : public Firesteel::App {
         }
     }
     virtual void onShutdown() override {
+        logParser.clear();
         config.save();
     }
 };
 
 int main() {
     config.load();
-    return FsLogViewer{}.start("Firesteel Log Viewer v.1.0 <DEV>",config.width,config.height);
+    return FsLogViewer{}.start("Firesteel Log Viewer v.1.0",config.width,config.height);
 }
