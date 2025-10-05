@@ -11,7 +11,8 @@ struct Config {
     bool preferencesOpen=false;
     bool messageViewerOpen=true;
     bool harvestedSystemInfoOpen=true;
-    bool categorize=false;
+    bool categorize = false;
+    bool lightTheme=false;
     bool multitoggles=false;
     bool showRecent=true;
     int maxRecent=5;
@@ -21,7 +22,7 @@ struct Config {
             LOG_ERRR("Failed to open file at: viewer.config");
             return;
         }
-        auto cfg=StrFromFile("viewer.config.json");
+        auto cfg=String::fromFile("viewer.config.json");
         nlohmann::json json=nlohmann::json::parse(cfg);
         if(!json["window"].is_null()) {
             if(!json["window"]["width"].is_null()) width=json["window"]["width"];
@@ -33,6 +34,7 @@ struct Config {
         }
         if(!json["preferences"].is_null()) {
             if(!json["preferences"]["categorize"].is_null()) categorize=json["preferences"]["categorize"];
+            if(!json["preferences"]["light_theme"].is_null()) multitoggles=json["preferences"]["light_theme"];
             if(!json["preferences"]["multitoggles"].is_null()) multitoggles=json["preferences"]["multitoggles"];
             if(!json["preferences"]["show_recent_files"].is_null()) showRecent=json["preferences"]["show_recent_files"];
             if(!json["preferences"]["max_recent_files"].is_null()) maxRecent=json["preferences"]["max_recent_files"];
@@ -43,6 +45,7 @@ struct Config {
         json["view"]["viewer"]=messageViewerOpen;
         json["view"]["systeminfo"]=harvestedSystemInfoOpen;
         json["preferences"]["categorize"]=categorize;
+        json["preferences"]["light_theme"]=lightTheme;
         json["preferences"]["multitoggles"]=multitoggles;
         json["preferences"]["show_recent_files"]=showRecent;
         json["preferences"]["max_recent_files"]=maxRecent;

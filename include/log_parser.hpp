@@ -97,7 +97,7 @@ struct LogParser {
         while(std::getline(f,curStr)) {
             //Parse the line.
             LogMessage msg{};
-            auto parsed=StrSplit(curStr,' ');
+            auto parsed=String::split(curStr,' ');
             msg.time=parsed[0];
             msg.typeBackup=parsed[1];
             //Validate message tag.
@@ -118,7 +118,7 @@ struct LogParser {
                             (msg.msg=="Found global Firesteel config. Retrieving...") ||
                             (isLogPreV021&&(msg.msg=="OpenGL context:"));
                         if(isLogPreV021) env.fsRenderer="OpenGL";
-                        else if(parsed.size()>3) {LOG(parsed[3]); if(parsed[3]=="context:") env.fsRenderer=parsed[2];}
+                        else if(parsed.size()>3) {LOG(parsed[3].c_str()); if(parsed[3]=="context:") env.fsRenderer=parsed[2];}
                         if(parsingEnvInfo) {
                             LOG("Found cfg line");
                             if(!isLogPreV021) parsedEnvLines+=3;

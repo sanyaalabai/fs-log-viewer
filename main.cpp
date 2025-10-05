@@ -1,4 +1,3 @@
-#define FS_PFD
 #include <../include/app.hpp>
 #include "imgui.utils/include/base.hpp"
 #include "include/cfg.hpp"
@@ -18,13 +17,29 @@ std::vector<std::string> openFileFilters{
     "All Files","*"
 };
 
+void openLog(const std::string& tPath) {
+    logParser.clear();
+    logParser.filePath=tPath;
+    //Reset current path.
+    std::filesystem::current_path(appPath);
+    recent.check(logParser.filePath, config.maxRecent);
+    //Parse the log.
+    logParser.parse();
+}
+
 class FsLogViewer : public Firesteel::App {
     virtual void onInitialize() override {
         appPath=std::filesystem::current_path();
         recent.load();
         logParser.clear();
+        if(config.lightTheme) ImGui::StyleColorsLight();
     }
     virtual void onUpdate() override {
+        if(Keyboard::keyDown(KeyCode::O)&&(Keyboard::getKey(KeyCode::LEFT_CONTROL)||Keyboard::getKey(KeyCode::RIGHT_CONTROL))) {
+            auto paths = OS::fileDialog(false,false,"",&openFileFilters,"Open log");
+            if(paths.size() > 0) openLog(paths[0]);
+            else LOG_ERRR("Failed to request log file path");
+        }
         ImGui::PopStyleVar(3);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
@@ -40,26 +55,14 @@ class FsLogViewer : public Firesteel::App {
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
         if(ImGui::BeginMenuBar()) {
             if(ImGui::BeginMenu("File")) {
-                if(ImGui::MenuItem("Open")) {
+                if(ImGui::MenuItem("Open (Ctrl+O)")) {
                     auto paths = OS::fileDialog(false,false,"",&openFileFilters,"Open log");
-                    if(paths.size()>0) {
-                        logParser.clear();
-                        logParser.filePath=paths[0];
-                        //Reset current path.
-                        std::filesystem::current_path(appPath);
-                        recent.check(logParser.filePath,config.maxRecent);
-                        //Parse the log.
-                        logParser.parse();
-                    } else LOG_ERRR("Failed to request log file path");
+                    if(paths.size()>0) openLog(paths[0]);
+                    else LOG_ERRR("Failed to request log file path");
                 }
                 if(config.showRecent) if(ImGui::BeginMenu("Recent")) {
                     for(size_t r=0;r<recent.paths.size();r++)
-                        if(ImGui::MenuItem(recent.paths[r].c_str())) {
-                            logParser.clear();
-                            logParser.filePath=recent.paths[r];
-                            recent.check(logParser.filePath,config.maxRecent);
-                            logParser.parse();
-                        }
+                        if(ImGui::MenuItem(recent.paths[r].c_str())) openLog(recent.paths[r]);
                     ImGui::EndMenu();
                 }
                 if(ImGui::MenuItem("Preferences")) config.preferencesOpen=true;
@@ -75,6 +78,7 @@ class FsLogViewer : public Firesteel::App {
 
             ImGui::Text("General");
             //ImGui::Checkbox("Categorize", &config.categorize);
+            if(ImGui::Checkbox("Light theme", &config.lightTheme)) config.lightTheme?ImGui::StyleColorsLight():ImGui::StyleColorsDark();
             ImGui::Checkbox("Allow multiple filters", &config.multitoggles);
 
             ImGui::Text("Security");
@@ -175,7 +179,7 @@ class FsLogViewer : public Firesteel::App {
                     switch (logParser.readValues[m].type) {
                     case MT_STATE: color=ImVec4(0.1f,0.4f,0.9f,1); break;
                     case MT_DEBUG: color=ImVec4(0.1f,0.8f,0.2f,1); break;
-                    case MT_INFO: color=ImVec4(0.75f,0.75f,0.75f,1); break;
+                    case MT_INFO: config.lightTheme?color=ImVec4(0.25f,0.25f,0.25f,1):color=ImVec4(0.75f,0.75f,0.75f,1); break;
                     case MT_WARNING: color=ImVec4(0.6f,0.5f,0.1f,1); break;
                     case MT_ERROR: color=ImVec4(0.8f,0.25f,0.15f,1); break;
                     case MT_CRITICAL: color=ImVec4(0.75f,0.1f,0.75f,1); break;
@@ -186,7 +190,7 @@ class FsLogViewer : public Firesteel::App {
                     ImGui::SameLine();
                 }
                 //Draw the message.
-                ImGui::Text(logParser.readValues[m].msg.c_str());
+                if(ImGui::Selectable(logParser.readValues[m].msg.c_str())) OS::copyToClipboard(logParser.readValues[m].msg);
                 ImGui::NewLine();
             }
             ImGui::End();
@@ -200,5 +204,5 @@ class FsLogViewer : public Firesteel::App {
 
 int main() {
     config.load();
-    return FsLogViewer{}.start("Firesteel Log Viewer v.1.0",config.width,config.height);
+    return FsLogViewer{}.start("Firesteel Log Viewer v.1.1",config.width,config.height);
 }

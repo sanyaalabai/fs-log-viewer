@@ -20,7 +20,7 @@ struct RecentFiles {
         std::string curStr="";
         //Get current line.
         while(std::getline(f,curStr))
-            paths.emplace_back(StrSplit(curStr,'\n')[0]);
+            paths.emplace_back(String::split(curStr,'\n')[0]);
     }
     void check(const std::string& tPath, const int& tMaxRecent) {
         //Check if path is already in recent files.
@@ -43,7 +43,7 @@ struct RecentFiles {
         //Write them to file.
         std::string finalFile=paths[0];
         for(size_t r=1;r<paths.size();r++) finalFile+="\n"+paths[r];
-        StrToFile("recent-files",finalFile);
+        String::toFile("recent-files",finalFile);
     }
 };
 
