@@ -3,15 +3,17 @@
 
 #include <iostream>
 #include <filesystem>
-#include "../engine/include/utils/log.hpp"
-#include "../engine/include/utils/json.hpp"
+#include <firesteel/utils/utils.hpp>
+#include <firesteel/utils/log.hpp>
+#include <firesteel/utils/json.hpp>
 
 struct Config {
     unsigned int width=800, height=600;
     bool preferencesOpen=false;
     bool messageViewerOpen=true;
     bool harvestedSystemInfoOpen=true;
-    bool categorize = false;
+    bool hideHarvestWarning=false;
+    bool categorize=false;
     bool lightTheme=false;
     bool multitoggles=false;
     bool showRecent=true;
@@ -34,6 +36,7 @@ struct Config {
         }
         if(!json["preferences"].is_null()) {
             if(!json["preferences"]["categorize"].is_null()) categorize=json["preferences"]["categorize"];
+            if(!json["preferences"]["hide_harvested_system_warning"].is_null()) hideHarvestWarning=json["preferences"]["hide_harvested_system_warning"];
             if(!json["preferences"]["light_theme"].is_null()) multitoggles=json["preferences"]["light_theme"];
             if(!json["preferences"]["multitoggles"].is_null()) multitoggles=json["preferences"]["multitoggles"];
             if(!json["preferences"]["show_recent_files"].is_null()) showRecent=json["preferences"]["show_recent_files"];
@@ -45,12 +48,13 @@ struct Config {
         json["view"]["viewer"]=messageViewerOpen;
         json["view"]["systeminfo"]=harvestedSystemInfoOpen;
         json["preferences"]["categorize"]=categorize;
+        json["preferences"]["hide_harvested_system_warning"]= hideHarvestWarning;
         json["preferences"]["light_theme"]=lightTheme;
         json["preferences"]["multitoggles"]=multitoggles;
         json["preferences"]["show_recent_files"]=showRecent;
-        json["preferences"]["max_recent_files"]=maxRecent;
+        json["preferences"]["max_recent_files"] = maxRecent;
         std::ofstream o("viewer.config.json");
-        o << std::setw(4) << json << std::endl;
+        o<<json<<std::endl;
     }
 };
 

@@ -5,8 +5,8 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
-#include "../engine/include/utils/utils.hpp"
-#include "../engine/include/utils/log.hpp"
+#include <firesteel/utils/utils.hpp>
+#include <firesteel/utils/log.hpp>
 
 struct RecentFiles {
     std::vector<std::string> paths;

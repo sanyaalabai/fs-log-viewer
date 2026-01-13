@@ -1,5 +1,8 @@
-#include <../include/app.hpp>
-#include "imgui.utils/include/base.hpp"
+#define FS_NO_COMPONENTS
+#define FS_NO_REG_TYPES
+#define FS_NO_JSON
+#include <firesteel/app.hpp>
+#include <imgui/imgui_internal.h>
 #include "include/cfg.hpp"
 #include "include/log_parser.hpp"
 #include "include/recent.hpp"
@@ -17,7 +20,12 @@ std::vector<std::string> openFileFilters{
     "All Files","*"
 };
 
-void openLog(const std::string& tPath) {
+static ImGuiDockNodeFlags defaultDockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_NoWindowMenuButton;
+static ImGuiWindowFlags defaultDockspaceWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking
+| ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoResize
+| ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus | ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
+
+static void openLog(const std::string& tPath) {
     logParser.clear();
     logParser.filePath=tPath;
     //Reset current path.
@@ -49,8 +57,8 @@ class FsLogViewer : public Firesteel::App {
         ImGui::SetNextWindowSize(viewport->WorkSize);
         ImGui::SetNextWindowViewport(viewport->ID);
         ImGuiID dockspace_id = ImGui::GetID("Firesteel Log Viewer");
-        ImGui::Begin("Firesteel Log Viewer", NULL, FSImGui::defaultDockspaceWindowFlags);
-        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), FSImGui::defaultDockspaceFlags);
+        ImGui::Begin("Firesteel Log Viewer", NULL, defaultDockspaceWindowFlags);
+        ImGui::DockSpace(dockspace_id, ImVec2(0.0f, 0.0f), defaultDockspaceFlags);
         ImGui::PopStyleVar(1);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(5.0f, 5.0f));
         if(ImGui::BeginMenuBar()) {
@@ -80,6 +88,7 @@ class FsLogViewer : public Firesteel::App {
             //ImGui::Checkbox("Categorize", &config.categorize);
             if(ImGui::Checkbox("Light theme", &config.lightTheme)) config.lightTheme?ImGui::StyleColorsLight():ImGui::StyleColorsDark();
             ImGui::Checkbox("Allow multiple filters", &config.multitoggles);
+            ImGui::Checkbox("Hide \"Harvest info\" warning", &config.hideHarvestWarning);
 
             ImGui::Text("Security");
             ImGui::Checkbox("Show recently open files", &config.showRecent);
@@ -128,7 +137,8 @@ class FsLogViewer : public Firesteel::App {
         }
         if(config.harvestedSystemInfoOpen) {
             ImGui::Begin("Harvested System Info", &config.harvestedSystemInfoOpen);
-            ImGui::TextWrapped("This tab can show incomplete information if user\
+            if(!config.hideHarvestWarning)
+                ImGui::TextWrapped("This tab can show incomplete information if user\
  has disabled hardware enumeration in global Firesteel config file\
  or if systemspecs has failed to retrieve information.");
             if(!logParser.env.fsVersion.empty()) if(ImGui::CollapsingHeader("Firesteel Configuration", ImGuiTreeNodeFlags_DefaultOpen)) {
